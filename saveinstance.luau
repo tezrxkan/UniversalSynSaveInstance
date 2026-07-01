@@ -71,8 +71,8 @@ local readfile = readfile
 local writefile = writefile
 
 -- Konstant v2.1 source
-local konstantSource = game:HttpGet("https://raw.githubusercontent.com/tezrxkan/UniversalSynSaveInstance/refs/heads/main/Dependencies/Konstant%202.1.luau", true)
-local konstantDecompiler = loadstring(konstantSource)()
+-- local konstantSource = game:HttpGet("https://raw.githubusercontent.com/tezrxkan/UniversalSynSaveInstance/refs/heads/main/Dependencies/Konstant%202.1.luau", true)
+-- local konstantDecompiler = loadstring(konstantSource)()
 
 local getscriptbytecode = global_container.getscriptbytecode -- * A lot of assumptions are made based on whether this function is defined or not. So in certain edge cases, like if the executor defines "decompile" or "getscripthash" function yet doesn't define this function there might be loss of functionality of the saveinstance. Although that would be very rare and weird
 local base64encode = global_container.base64encode
