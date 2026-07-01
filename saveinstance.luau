@@ -3145,7 +3145,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 	end
 
 	local SaveBytecode
-		if OPTIONS.SaveBytecode and getscriptbytecode then
+			if OPTIONS.SaveBytecode and getscriptbytecode then
 		SaveBytecode = function(script)
 			local s, bytecode = getbytecode(script)
 	
@@ -3190,9 +3190,19 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 					if DecompileJobless then
 						return "-- Not found in already decompiled ScriptCache"
 					end
+					
+					-- Get bytecode anyway for Konstant
+					local s
+					s, bytecode = getbytecode(script)
+					if s and bytecode and bytecode ~= "" then
+						-- bytecode is available
+					else
+						return "-- Could not retrieve bytecode for decompilation"
+					end
 				end
 	
-				local ok, result = run_with_loading("Decompiling " .. script.Name .. " (Konstant)", true, nil, decomp, script)
+				-- Pass the bytecode to Konstant decompiler
+				local ok, result = run_with_loading("Decompiling " .. script.Name .. " (Konstant)", true, nil, decomp, bytecode)
 				if not result then
 					ok, result = false, "Empty Output"
 				end
@@ -3215,7 +3225,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 				return output
 			end
 		elseif decompile then
-			-- Fallback to built-in decompiler
+			-- Fallback to built-in decompiler (expects script instance)
 			local decomp = construct_TimeoutHandler(DecompileTimeout, decompile, "Decompiler timed out")
 			
 			ldecompile = function(script)
@@ -3246,6 +3256,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 					end
 				end
 	
+				-- Built-in decompiler expects script instance
 				local ok, result = run_with_loading("Decompiling " .. script.Name, true, nil, decomp, script)
 				if not result then
 					ok, result = false, "Empty Output"
