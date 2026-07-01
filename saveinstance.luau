@@ -3146,145 +3146,116 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 
 	local SaveBytecode
 			if OPTIONS.SaveBytecode and getscriptbytecode then
-		SaveBytecode = function(script)
-			local s, bytecode = getbytecode(script)
-	
-			if s and bytecode and bytecode ~= "" then
-				return "-- Bytecode (Base64):\n-- " .. base64encode(bytecode) .. "\n\n"
-			end
+	SaveBytecode = function(script)
+		local s, bytecode = getbytecode(script)
+
+		if s and bytecode and bytecode ~= "" then
+			return "-- Bytecode (Base64):\n-- " .. base64encode(bytecode) .. "\n\n"
 		end
 	end
-	
-	do
-		if not OPTIONS.Decompile then
-			ldecompile = function()
-				return "-- Decompiling is disabled"
+end
+
+-- Load Konstant decompiler if available and needed
+if getscriptbytecode then
+	if (decompile == nil and OPTIONS.decomptype == "") or OPTIONS.decomptype == "custom" then
+		local url = "https://raw.githubusercontent.com/Devraj2010isme/BetterSaveinstance/refs/heads/main/Dependencies/Konstant%20V2.1.luau"
+		local success, result = pcall(function()
+			local konstant = loadstring(game:HttpGet(url, true))()
+			return konstant
+		end)
+		
+		if success and result and result.decompile then
+			GLOBAL_ENV.decompile = result.decompile
+			if __DEBUG_MODE then
+				__DEBUG_MODE("Konstant decompiler loaded successfully")
 			end
-		elseif konstantDecompiler then
-			-- Use Konstant as the primary decompiler
-			local decomp = construct_TimeoutHandler(DecompileTimeout, konstantDecompiler, "Konstant decompiler timed out")
-			
-			ldecompile = function(script)
-				local bytecode
-				if ScriptCache then
-					local s
-					s, bytecode = getbytecode(script)
-					local cached
-	
-					if s then
-						if not bytecode or bytecode == "" then
-							return "-- The Script is Empty"
-						end
-						cached = ldeccache[bytecode]
-					else
-						bytecode = nil
+		elseif __DEBUG_MODE then
+			__DEBUG_MODE("Failed to load Konstant decompiler")
+		end
+	end
+end
+
+do
+	if not OPTIONS.Decompile then
+		ldecompile = function()
+			return "-- Decompiling is disabled"
+		end
+	elseif decompile then
+		-- Use either Konstant (if loaded) or built-in decompiler
+		local decomp = construct_TimeoutHandler(DecompileTimeout, decompile, "Decompiler timed out")
+		
+		ldecompile = function(script)
+			local bytecode
+			if ScriptCache then
+				local s
+				s, bytecode = getbytecode(script)
+				local cached
+
+				if s then
+					if not bytecode or bytecode == "" then
+						return "-- The Script is Empty"
 					end
-	
-					if cached then
-						if __DEBUG_MODE then
-							__DEBUG_MODE("Found in Cache", script:GetFullName())
-						end
-						return cached
-					end
+					cached = ldeccache[bytecode]
 				else
-					if DecompileJobless then
-						return "-- Not found in already decompiled ScriptCache"
-					end
-					
-					-- Get bytecode anyway for Konstant
-					local s
-					s, bytecode = getbytecode(script)
-					if s and bytecode and bytecode ~= "" then
-						-- bytecode is available
-					else
-						return "-- Could not retrieve bytecode for decompilation"
-					end
+					bytecode = nil
 				end
-	
-				-- Pass the bytecode to Konstant decompiler
-				local ok, result = run_with_loading("Decompiling " .. script.Name .. " (Konstant)", true, nil, decomp, bytecode)
-				if not result then
-					ok, result = false, "Empty Output"
-				end
-	
-				local output
-				if ok then
-					result = string.gsub(result, "\0", "\\0")
-					output = result
-				else
-					output = "--[[ Failed to decompile with Konstant. Reason:\n" .. (result or "") .. "\n]]"
-				end
-	
-				if ScriptCache and bytecode then
-					ldeccache[bytecode] = output
+
+				if cached then
 					if __DEBUG_MODE then
-						__DEBUG_MODE("Cached", script:GetFullName())
+						__DEBUG_MODE("Found in Cache", script:GetFullName())
 					end
+					return cached
 				end
-	
-				return output
+			else
+				if DecompileJobless then
+					return "-- Not found in already decompiled ScriptCache"
+				end
 			end
-		elseif decompile then
-			-- Fallback to built-in decompiler (expects script instance)
-			local decomp = construct_TimeoutHandler(DecompileTimeout, decompile, "Decompiler timed out")
-			
-			ldecompile = function(script)
-				local bytecode
-				if ScriptCache then
-					local s
-					s, bytecode = getbytecode(script)
-					local cached
-	
-					if s then
-						if not bytecode or bytecode == "" then
-							return "-- The Script is Empty"
-						end
-						cached = ldeccache[bytecode]
-					else
-						bytecode = nil
-					end
-	
-					if cached then
-						if __DEBUG_MODE then
-							__DEBUG_MODE("Found in Cache", script:GetFullName())
-						end
-						return cached
-					end
+
+			-- Pass the script to the decompiler (Konstant's decompile expects bytecode)
+			-- but the built-in decompiler expects a script instance
+			-- We need to determine which one we have
+			local ok, result
+			if GLOBAL_ENV.decompile == decompile and getscriptbytecode then
+				-- This is likely Konstant, pass bytecode
+				local s, bc = getbytecode(script)
+				if s and bc and bc ~= "" then
+					ok, result = run_with_loading("Decompiling " .. script.Name .. " (Konstant)", true, nil, decomp, bc)
 				else
-					if DecompileJobless then
-						return "-- Not found in already decompiled ScriptCache"
-					end
+					return "-- Could not retrieve bytecode for Konstant decompilation"
 				end
-	
+			else
 				-- Built-in decompiler expects script instance
-				local ok, result = run_with_loading("Decompiling " .. script.Name, true, nil, decomp, script)
-				if not result then
-					ok, result = false, "Empty Output"
-				end
-	
-				local output
-				if ok then
-					result = string.gsub(result, "\0", "\\0")
-					output = result
-				else
-					output = "--[[ Failed to decompile. Reason:\n" .. (result or "") .. "\n]]"
-				end
-	
-				if ScriptCache and bytecode then
-					ldeccache[bytecode] = output
-					if __DEBUG_MODE then
-						__DEBUG_MODE("Cached", script:GetFullName())
-					end
-				end
-	
-				return output
+				ok, result = run_with_loading("Decompiling " .. script.Name, true, nil, decomp, script)
 			end
-		else
-			ldecompile = function()
-				return "-- Your Executor does NOT have a Decompiler"
+			
+			if not result then
+				ok, result = false, "Empty Output"
 			end
+
+			local output
+			if ok then
+				result = string.gsub(result, "\0", "\\0")
+				output = result
+			else
+				output = "--[[ Failed to decompile. Reason:\n" .. (result or "") .. "\n]]"
+			end
+
+			if ScriptCache and bytecode then
+				ldeccache[bytecode] = output
+				if __DEBUG_MODE then
+					__DEBUG_MODE("Cached", script:GetFullName())
+				end
+			end
+
+			return output
+		end
+	else
+		ldecompile = function()
+			return "-- Your Executor does NOT have a Decompiler"
 		end
 	end
+end
 
 	local function GetLocalPlayer()
 		return service.Players.LocalPlayer
