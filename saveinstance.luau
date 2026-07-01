@@ -95,6 +95,14 @@ local service = setmetatable({}, {
 	end,
 })
 
+if getscriptbytecode then
+	if (decompile == nil and decomptype == "") or decomptype == "custom" then
+		local url = "https://raw.githubusercontent.com/Devraj2010isme/BetterSaveinstance/refs/heads/main/Dependencies/Konstant%20V2.1.luau"
+		local konstant = loadstring(game:HttpGet(url, true))()
+		GLOBAL_ENV.decompile = konstant.decompile
+	end
+end
+
 local SharedString_identifier = 1e15 -- 1 quadrillion, up to 9.(9) quadrillion, in theory this shouldn't ever run out and be enough for all sharedstrings ever imaginable 	-- TODO: worst case, add fallback to str randomizer once numbers run out : )
 local SharedStrings = setmetatable({}, {
 	__index = function(self, str)
@@ -3141,7 +3149,11 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 
 	local getbytecode
 	if getscriptbytecode then
-		getbytecode = construct_TimeoutHandler(3, getscriptbytecode) -- ? Solara fix
+		if (decompile == nil and OPTIONS.decomptype == "") or OPTIONS.decomptype == "custom" then
+			local url = "https://raw.githubusercontent.com/Devraj2010isme/BetterSaveinstance/refs/heads/main/Dependencies/Konstant%20V2.1.luau"
+			local konstant = loadstring(game:HttpGet(url, true))()
+			GLOBAL_ENV.decompile = konstant.decompile
+		end
 	end
 
 	local SaveBytecode
