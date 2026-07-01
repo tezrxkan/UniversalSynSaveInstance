@@ -3145,32 +3145,32 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 	end
 
 	local SaveBytecode
-	if OPTIONS.SaveBytecode and getscriptbytecode then
+		if OPTIONS.SaveBytecode and getscriptbytecode then
 		SaveBytecode = function(script)
 			local s, bytecode = getbytecode(script)
-
+	
 			if s and bytecode and bytecode ~= "" then
 				return "-- Bytecode (Base64):\n-- " .. base64encode(bytecode) .. "\n\n"
 			end
 		end
 	end
-
+	
 	do
 		if not OPTIONS.Decompile then
 			ldecompile = function()
 				return "-- Decompiling is disabled"
 			end
-		elseif decompile then
-			local decomp = construct_TimeoutHandler(DecompileTimeout, decompile, "Decompiler timed out")
-
+		elseif konstantDecompiler then
+			-- Use Konstant as the primary decompiler
+			local decomp = construct_TimeoutHandler(DecompileTimeout, konstantDecompiler, "Konstant decompiler timed out")
+			
 			ldecompile = function(script)
-				-- local name = scr.ClassName .. scr.Name
 				local bytecode
 				if ScriptCache then
 					local s
 					s, bytecode = getbytecode(script)
 					local cached
-
+	
 					if s then
 						if not bytecode or bytecode == "" then
 							return "-- The Script is Empty"
@@ -3179,7 +3179,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 					else
 						bytecode = nil
 					end
-
+	
 					if cached then
 						if __DEBUG_MODE then
 							__DEBUG_MODE("Found in Cache", script:GetFullName())
@@ -3190,30 +3190,82 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 					if DecompileJobless then
 						return "-- Not found in already decompiled ScriptCache"
 					end
-
-					-- task.wait() -- TODO Maybe remove?
 				end
-
-				local ok, result = run_with_loading("Decompiling " .. script.Name, true, nil, decomp, script)
+	
+				local ok, result = run_with_loading("Decompiling " .. script.Name .. " (Konstant)", true, nil, decomp, script)
 				if not result then
 					ok, result = false, "Empty Output"
 				end
-
+	
 				local output
 				if ok then
-					result = string.gsub(result, "\0", "\\0") -- ? Some decompilers sadly output \0 which prevents files from opening
+					result = string.gsub(result, "\0", "\\0")
 					output = result
 				else
-					output = "--[[ Failed to decompile. Reason:\n" .. (result or "") .. "\n]]"
+					output = "--[[ Failed to decompile with Konstant. Reason:\n" .. (result or "") .. "\n]]"
 				end
-
-				if ScriptCache and bytecode then -- TODO there might(?) be an edgecase where it manages to decompile (built-in) even though getscriptbytecode failed, and the output won't get cached
-					ldeccache[bytecode] = output -- ? Should we cache even if it timed out?
+	
+				if ScriptCache and bytecode then
+					ldeccache[bytecode] = output
 					if __DEBUG_MODE then
 						__DEBUG_MODE("Cached", script:GetFullName())
 					end
 				end
-
+	
+				return output
+			end
+		elseif decompile then
+			-- Fallback to built-in decompiler
+			local decomp = construct_TimeoutHandler(DecompileTimeout, decompile, "Decompiler timed out")
+			
+			ldecompile = function(script)
+				local bytecode
+				if ScriptCache then
+					local s
+					s, bytecode = getbytecode(script)
+					local cached
+	
+					if s then
+						if not bytecode or bytecode == "" then
+							return "-- The Script is Empty"
+						end
+						cached = ldeccache[bytecode]
+					else
+						bytecode = nil
+					end
+	
+					if cached then
+						if __DEBUG_MODE then
+							__DEBUG_MODE("Found in Cache", script:GetFullName())
+						end
+						return cached
+					end
+				else
+					if DecompileJobless then
+						return "-- Not found in already decompiled ScriptCache"
+					end
+				end
+	
+				local ok, result = run_with_loading("Decompiling " .. script.Name, true, nil, decomp, script)
+				if not result then
+					ok, result = false, "Empty Output"
+				end
+	
+				local output
+				if ok then
+					result = string.gsub(result, "\0", "\\0")
+					output = result
+				else
+					output = "--[[ Failed to decompile. Reason:\n" .. (result or "") .. "\n]]"
+				end
+	
+				if ScriptCache and bytecode then
+					ldeccache[bytecode] = output
+					if __DEBUG_MODE then
+						__DEBUG_MODE("Cached", script:GetFullName())
+					end
+				end
+	
 				return output
 			end
 		else
