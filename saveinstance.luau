@@ -2467,7 +2467,7 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 
 	local OPTIONS = {
 		mode = "optimized",
-		Decompile = EXECUTOR_NAME ~= "Velocity" -- TODO Temp fix for crashes
+		Decompile = EXECUTOR_NAME ~= "Velocity", -- TODO Temp fix for crashes
 		scriptcache = true,
 		decomptype = "",
 		DecompileTimeout = 10,
