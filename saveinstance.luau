@@ -8,6 +8,66 @@ local function pcall_index(obj: any, key: any): any
 	return ok and result or nil
 end
 
+local BUFFER_SIZE_36 = 36
+local BUFFER_SIZE_8 = 8
+local BUFFER_SIZE_0 = 0
+local SHARED_STRING_START_ID = 1e15
+local FALLBACK_CLIENT_VERSION = 9e9
+local BREAK_PREFIX = BREAK_PREFIX
+local USSI_FOLDER = USSI_FOLDER
+local USSI_CACHE_FOLDER = USSI_FOLDER
+local ROTATION_BUFFER_SIZE = 36
+local EMPTY_BUFFER_SIZE = 0
+local SCRATCH_BUFFER_SIZE = 8
+
+local BUFFER_SIZE_36 = 36
+local BUFFER_SIZE_8 = 8
+local BUFFER_SIZE_0 = 0
+local SHARED_STRING_START_ID = 1e15
+local FALLBACK_CLIENT_VERSION = 9e9
+local BREAK_PREFIX = BREAK_PREFIX
+local USSI_FOLDER = USSI_FOLDER
+local USSI_CACHE_FOLDER = USSI_FOLDER
+local ROTATION_BUFFER_SIZE = 36
+local EMPTY_BUFFER_SIZE = 0
+local SCRATCH_BUFFER_SIZE = 8
+
+local BUFFER_SIZE_36 = 36
+local BUFFER_SIZE_8 = 8
+local BUFFER_SIZE_0 = 0
+local SHARED_STRING_START_ID = 1e15
+local FALLBACK_CLIENT_VERSION = 9e9
+local BREAK_PREFIX = BREAK_PREFIX
+local USSI_FOLDER = USSI_FOLDER
+local USSI_CACHE_FOLDER = USSI_FOLDER
+local ROTATION_BUFFER_SIZE = 36
+local EMPTY_BUFFER_SIZE = 0
+local SCRATCH_BUFFER_SIZE = 8
+
+local BUFFER_SIZE_36 = 36
+local BUFFER_SIZE_8 = 8
+local BUFFER_SIZE_0 = 0
+local SHARED_STRING_START_ID = 1e15
+local FALLBACK_CLIENT_VERSION = 9e9
+local BREAK_PREFIX = BREAK_PREFIX
+local USSI_FOLDER = USSI_FOLDER
+local USSI_CACHE_FOLDER = USSI_FOLDER
+local ROTATION_BUFFER_SIZE = 36
+local EMPTY_BUFFER_SIZE = 0
+local SCRATCH_BUFFER_SIZE = 8
+
+local BUFFER_SIZE_36 = 36
+local BUFFER_SIZE_8 = 8
+local BUFFER_SIZE_0 = 0
+local SHARED_STRING_START_ID = 1e15
+local FALLBACK_CLIENT_VERSION = 9e9
+local BREAK_PREFIX = BREAK_PREFIX
+local USSI_FOLDER = USSI_FOLDER
+local USSI_CACHE_FOLDER = USSI_FOLDER
+local ROTATION_BUFFER_SIZE = 36
+local EMPTY_BUFFER_SIZE = 0
+local SCRATCH_BUFFER_SIZE = 8
+
 local function arrayToDict(t: {[any]: any}, mixedMode: boolean, valueOverride: any, typeStrict: string?): {[any]: any}
 	local tmp: {[any]: any} = {}
 
@@ -159,9 +219,9 @@ end
 
 local FALLBACK_CLIENT_VERSION = 9e9
 local CLIENT_VERSION = tonumber(string.match(FULL_VERSION, "%d+%.(%d+)")) or FALLBACK_CLIENT_VERSION
-local BREAK_PREFIX = "__BREAK"
+local BREAK_PREFIX = BREAK_PREFIX
 local __BREAK = BREAK_PREFIX .. service.HttpService:GenerateGUID(false)
-local USSI_FOLDER = "ussi_cache/"
+local USSI_FOLDER = USSI_FOLDER
 local USSI_CACHE_FOLDER = USSI_FOLDER
 
 pcall(function()
@@ -274,7 +334,7 @@ local CFrame_Rotation_Ids: {[string]: number} = {
 	["\0\0\0\0\0\0\0\0\0\0\128\191\0\0\0\0\0\0\128\191\0\0\0\128\0\0\128\191\0\0\0\0\0\0\0\128"] = 0x23,
 }
 local ROTATION_BUFFER_SIZE = 36
-local rotationBuffer = buffer.create(ROTATION_BUFFER_SIZE)
+local rotationBuffer = buffer.create(BUFFER_SIZE_36)
 local bf32_rotation = buffer.writef32
 
 local function rawBasisString(r00: number, r01: number, r02: number, r10: number, r11: number, r12: number, r20: number, r21: number, r22: number): string
@@ -769,7 +829,7 @@ Attribute_Encoders = {
 		return b, 1
 	end,
 	["number"] = function(raw) -- double
-		local b = buffer.create(8)
+		local b = buffer.create(BUFFER_SIZE_8)
 
 		buffer.writef64(b, 0, raw)
 
@@ -886,7 +946,7 @@ Attribute_Encoders = {
 		return b, len
 	end,
 	["UDim"] = function(raw)
-		local b = buffer.create(8)
+		local b = buffer.create(BUFFER_SIZE_8)
 
 		buffer.writef32(b, 0, raw.Scale)
 		buffer.writei32(b, 4, raw.Offset)
@@ -1067,7 +1127,7 @@ Attribute_Encoders = {
 		return b, len
 	end,
 	["SecurityCapabilities"] = function(raw)
-		local b = buffer.create(8)
+		local b = buffer.create(BUFFER_SIZE_8)
 
 		if raw == BASE_CAPABILITIES then
 			return b, 8
@@ -4092,7 +4152,7 @@ local function synsaveinstance(...: any): ()
 		IsModel = nil
 	end
 
-	local function isLuaSourceContainer(instance)
+	local function isLuaSourceContainer(instance: Instance): boolean
 		return instance:IsA("LuaSourceContainer")
 	end
 
