@@ -4270,7 +4270,7 @@ local function synsaveinstance(...)
 			or service.Players.LocalPlayer
 	end
 
-	local function get_size_format()
+	local function get_size_format(): string
 		local Size
 
 		for i, unit in
@@ -4292,7 +4292,7 @@ local function synsaveinstance(...)
 	end
 
 	local RenderStepped = service.RunService.RenderStepped
-	local function wait_for_render()
+	local function wait_for_render(): ()
 		pcall(RenderStepped.Wait, RenderStepped) -- ? Needed for at least 1fps (status text); pcall due to "thread cannot be yielded to Wait"
 	end
 
@@ -4321,7 +4321,7 @@ local function synsaveinstance(...)
 		end)
 	end
 
-	local function run_with_loading(text, keepStatus, waitForRender, taskFunction, ...)
+	local function run_with_loading(text: string, keepStatus: boolean, waitForRender: boolean, taskFunction: (...any) -> (...any), ...: any): ...any
 		local previousStatus
 		if StatusText then
 			if keepStatus then
@@ -5603,7 +5603,7 @@ local function synsaveinstance(...)
 		return chunks
 	end
 
-	local function save_game()
+	local function save_game(): ()
 		SaveNotCreatable = SaveNotCreatable
 			or IsolateLocalPlayer
 			or IsolatePlayers
