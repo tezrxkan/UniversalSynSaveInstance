@@ -1749,8 +1749,8 @@ do
 	XML_Encoders[encoderName] = XML_Encoders[redirectName]
 end
 
-local ClassList, FetchAPI
-local RiskyServicesDisabled
+local ClassList: {[string]: any}?, FetchAPI: () -> ({[string]: any}?, string?)
+local RiskyServicesDisabled: {[string]: boolean}?
 do
 	local ClassPropertyExceptions = arrayToDict({
 		Whitelist = {
@@ -1765,7 +1765,7 @@ do
 		},
 	}, true)
 
-	local function AttributesSerialize(attrs, header_bytes)
+	local function AttributesSerialize(attrs: {[string]: any}, header_bytes: {number}?): string
 		-- * There are certain restrictions for names of attributes
 		-- https://create.roblox.com/docs/reference/engine/classes/Instance#SetAttribute
 		-- But it seems like even if those are present, Studio still opens the file just fine
@@ -1833,7 +1833,7 @@ do
 		return buffer.tostring(b)
 	end
 
-	local function AttenuationSerialize(attenuations)
+	local function AttenuationSerialize(attenuations: {[number]: number}): string
 		if not next(attenuations) then
 			return "\0" -- ? [CONSTANT] Version byte (likely)
 		end
@@ -1862,7 +1862,7 @@ do
 		return buffer.tostring(b)
 	end
 
-	local function TransformsSerialize(transforms)
+	local function TransformsSerialize(transforms: {CFrame}): string
 		local n = #transforms
 
 		if n == 0 then
@@ -1900,7 +1900,7 @@ do
 		return buffer.tostring(b)
 	end
 
-	local function ServiceVisibilitySerialize(wantVisible)
+	local function ServiceVisibilitySerialize(wantVisible: boolean): string
 		local ExplorerServiceVisibilityService = game:GetService("ExplorerServiceVisibilityService")
 		local stringEncoder = Attribute_Encoders["string"]
 		local typeId = Attribute_Type_Ids["string"]
@@ -1945,7 +1945,7 @@ do
 		return buffer.tostring(b)
 	end
 
-	local function encodeTimeTicks(time)
+	local function encodeTimeTicks(time: number): number
 		local scaled = time * 2400
 		if not (scaled >= -2147483648 and scaled < 2147483648) then
 			return -2147483648
@@ -1953,7 +1953,7 @@ do
 		return math.round(scaled)
 	end
 
-	local function writeTimesSection(b, offset, keys)
+	local function writeTimesSection(b: buffer, offset: number, keys: {any}): number
 		buffer.writeu32(b, offset, 1)
 		offset += 4
 		buffer.writeu32(b, offset, #keys)
@@ -1965,7 +1965,7 @@ do
 		return offset
 	end
 
-	local function deriveTangentValueCurve(keys, i)
+	local function deriveTangentValueCurve(keys: {any}, i: number): (number, number)
 		local key = keys[i]
 		local isFirst = (i == 1)
 		local isLast = (i == #keys)
@@ -1998,7 +1998,7 @@ do
 		end
 	end
 
-	local function deriveTangentFloatCurve(keys, i)
+	local function deriveTangentFloatCurve(keys: {any}, i: number): (number, number)
 		local key = keys[i]
 		local isFirst = (i == 1)
 		local isLast = (i == #keys)
@@ -2027,7 +2027,7 @@ do
 		end
 	end
 
-	local function encodeGuid(uid)
+	local function encodeGuid(uid: string): string
 		local cleanGuid = string.gsub(uid, "[{}-]", "")
 		local bytes = buffer.create(16)
 
@@ -2045,7 +2045,7 @@ do
 		- https://github.com/luau/UniversalSynSaveInstance/blob/main/Tools/NotScriptable-Related/Potentially%20Missing%20Properties%20Dumper/Potentially%20Missing%20Properties%20Dumper.luau
 		- https://github.com/luau/UniversalSynSaveInstance/blob/main/Tools/NotScriptable-Related/NotScriptable%20Dumper/NotScriptable%20Dumper.py
 		]]
-	local NotScriptableFixes = {
+	local NotScriptableFixes: {[string]: {[string]: (any) -> (any, string?)}} = {
 		Instance = {
 			AttributesSerialize = function(instance)
 				local attrs = instance:GetAttributes()
@@ -3972,7 +3972,7 @@ local function synsaveinstance(...)
 
 	local LP_UserId, LP_Name, ANON_UserId, ANON_Name, Anonymizers
 
-	local function anonymize(raw, valueType)
+	local function anonymize(raw: any, valueType: string): any
 		if not Anonymizers then
 			return raw
 		end
@@ -4034,13 +4034,13 @@ local function synsaveinstance(...)
 				padded = string.sub(padded, 1, #LP_Name)
 			end
 
-			local function scrubName(raw)
+			local function scrubName(raw: string): string
 				return gsubCaseInsensitive(raw, LP_Name, ANON_Name)
 			end
-			local function scrubFixedWidth(raw)
+			local function scrubFixedWidth(raw: string): string
 				return gsubCaseInsensitive(raw, LP_Name, padded)
 			end
-			local function scrubId(raw)
+			local function scrubId(raw: string): string
 				return raw == LP_UserId and ANON_UserId or raw
 			end
 
