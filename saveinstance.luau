@@ -3538,7 +3538,6 @@ end
 --- * Note: Options are case-insensitive, meaning you can type `NilInstances` option as `nilInStaNces` and it still will be valid.
 --- @within SynSaveInstance
 --- @field __DEBUG_MODE boolean -- This will print debug logs to console about unusual scenarios. Recommended to enable if you wish to help us improve our products and find bugs / issues with it! ___Default:___ false
---- @field ReadMe boolean --___Default:___ true
 --- @field Binary boolean -- Saves as a binary file (.rbxl/.rbxm) instead of XML (.rbxlx/.rbxmx). Much smaller and faster to load. Pass `XML = true` for the opposite. ___Default:___ true
 --- @field CompressionMode string -- How chunks are compressed in binary mode: "zstd", "lz4", or false for none. ___Default:___ "zstd"
 --- @field CompressionLevel number -- Compression strength, higher is smaller but slower. Range is -7 to 22 inclusive. ___Default:___ 9
@@ -3698,7 +3697,6 @@ local function synsaveinstance(...: any): ()
 		ShutdownWhenDone = false,
 		AntiIdle = true,
 		Anonymous = false,
-		ReadMe = true,
 		FilePath = false,
 		AvoidFileOverwrite = true,
 		Object = false,
@@ -4080,11 +4078,7 @@ local function synsaveinstance(...: any): ()
 
 	local SharedBinaryStrings = OPTIONS.SharedBinaryStrings
 
-	local ToSaveList, ldecompile, placename, elapse_t, SaveNotCreatableWillBeEnabled, RecoveredScripts
-
-	if OPTIONS.ReadMe then
-		RecoveredScripts = {}
-	end
+	local ToSaveList, ldecompile, placename, elapse_t, SaveNotCreatableWillBeEnabled
 
 	if Object == game then
 		OPTIONS.mode = "full"
@@ -4524,11 +4518,6 @@ local function synsaveinstance(...: any): ()
 		local hasLinkedSource = LinkedSource_Url ~= ""
 		local LinkedSource_type
 		if hasLinkedSource then
-			local Path = instance:GetFullName()
-			if RecoveredScripts then
-				table.insert(RecoveredScripts, Path)
-			end
-
 			LinkedSource = string.match(LinkedSource_Url, "%w+$") -- TODO: No sure if this pattern matches all possible cases. Example is: 'rbxassetid://0&hash=cd73dd2fe5e5013137231c227da3167e'
 			if LinkedSource then
 				if ScriptCache then
@@ -5223,12 +5212,12 @@ local function synsaveinstance(...: any): ()
 					for i = 1, n do
 						local value = entries[objs[i]].override.Properties[propName]
 						if type(value) == "function" then
-							value = value() -- Deferred Source (README): resolved at encode time
+							value = value() -- Deferred Source: resolved at encode time
 						end
 						buf:writeLenString(value or "")
 					end
 
-					local chunk = buildChunk("PROP", buf, not isSource and compress or nil) -- ! Assumes README is the only one that uses .Source, expect anything that does to be uncompressed
+					local chunk = buildChunk("PROP", buf, not isSource and compress or nil)
 					propChunks[#propChunks + 1] = chunk
 					totalsize += chunk.len + (chunk.str and #chunk.str or chunk.tailLen or 0)
 				end
@@ -5436,7 +5425,7 @@ local function synsaveinstance(...: any): ()
 				if entry.propsOnly then
 					for propName, value in entry.override.Properties do
 						if type(value) == "function" then
-							value = value() -- Deferred Source (README): resolved at encode time
+							value = value() -- Deferred Source: resolved at encode time
 						end
 						if value ~= nil then
 							if propName == "Source" then
@@ -5677,142 +5666,6 @@ local function synsaveinstance(...: any): ()
 			register_extra("Nil Instances", nil_instances)
 		end
 
-		local ELAPSED_PLACEHOLDER = "@@ELAPSED" .. string.gsub(service.HttpService:GenerateGUID(false), "-", "") .. "@@"
-		local ELAPSED_WIDTH = "%-" .. #ELAPSED_PLACEHOLDER .. "s"
-
-		local function stampElapsed(chunks: {string}, seconds: number): string
-			local repl = string.format(ELAPSED_WIDTH, string.format("%.6f seconds", seconds))
-			if #repl ~= #ELAPSED_PLACEHOLDER then
-				return
-			end
-			for i, chunk in chunks do
-				local at = string.find(chunk, ELAPSED_PLACEHOLDER, 1, true)
-				if at then
-					chunks[i] = string.sub(chunk, 1, at - 1) .. repl .. string.sub(chunk, at + #ELAPSED_PLACEHOLDER)
-					return
-				end
-			end
-		end
-
-		local readmeExtra
-		if OPTIONS.ReadMe then
-			local binaryNote = ""
-			if not OPTIONS.Binary then
-				binaryNote = [[
-		If you didn't save in Binary (rbxl) - it's recommended to save the game right away to take advantage of the binary format & to preserve values of certain properties if you used IgnoreDefaultProperties setting (as they might change in the future).
-		You can do that by going to FILE -> Save to File As -> Make sure File Name ends with .rbxl -> Save
-
-]]
-			end
-
-			local helpText = [[
-		ServerStorage, ServerScriptService and Server Scripts are IMPOSSIBLE to save because of FilteringEnabled.
-
-		If your player cannot spawn into the game, please move the scripts in StarterPlayer somewhere else or delete them. Then run `game:GetService("Players").CharacterAutoLoads = true`.
-		And use "Play Here" to start game instead of "Play" to spawn your Character where your Camera currently is.
-
-		If the chat system does not work, please use the explorer and delete everything inside the TextChatService/Chat service(s).
-		Or run `game:GetService("Chat"):ClearAllChildren() game:GetService("TextChatService"):ClearAllChildren()`
-
-		If Union and MeshPart collisions don't work, run the script below in the Studio Command Bar:
-
-
-		local C = game:GetService("CoreGui")
-		local D = Enum.CollisionFidelity.Default
-
-		for _, v in game:GetDescendants() do
-			if v:IsA("TriangleMeshPart") and not v:IsDescendantOf(C) then
-				v.CollisionFidelity = D
-			end
-		end
-		print("Done")
-
-		If you can't move the Camera, run this script in the Studio Command Bar:
-
-		workspace.CurrentCamera.CameraType = Enum.CameraType.Fixed
-
-		Or Destroy the Camera.
-
-		This file was generated with the following settings:
-		]]
-
-			local platformName = select(
-				2,
-				pcall(function()
-					return service.UserInputService:GetPlatform().Name --  -- Won't work on lvl 2 execs but we can safely assume they're on PC (and likely Windows)
-				end)
-			) or "Unknown"
-
-			local executorName = identify_executor and table.concat({ identify_executor() }, " ") or "Unknown"
-
-			local metaFooter = table.concat({
-				"\n\n\t\tElapsed time: ",
-				ELAPSED_PLACEHOLDER,
-				"\n\t\tDate (UTC): ",
-				DateTime.now():FormatUniversalTime("LL LTS", "en-gb"),
-				" PlaceId: ",
-				game.PlaceId,
-				" PlaceVersion: ",
-				game.PlaceVersion,
-				" Client Version: ",
-				FULL_VERSION,
-				" Platform: ",
-				platformName,
-				" Executor: ",
-				executorName,
-			})
-
-			readmeExtra = register_extra("README", nil, nil, "Script", function()
-				local recoveredNote = ""
-				if #RecoveredScripts ~= 0 then
-					recoveredNote = "\t\tIMPORTANT: Original Source of these Scripts was Recovered: "
-						.. service.HttpService:JSONEncode(RecoveredScripts)
-						.. "\n"
-				end
-
-				local failedTypes, crashTypes = {}, {}
-				for datatype, state in GHPPersisted do
-					if state == "crashed" then
-						table.insert(crashTypes, datatype)
-					elseif state ~= "ok" then
-						table.insert(failedTypes, datatype)
-					end
-				end
-				table.sort(failedTypes)
-				table.sort(crashTypes)
-
-				local ghpFailureHeader = ""
-				if #failedTypes > 0 or #crashTypes > 0 then
-					ghpFailureHeader ..= [[
-		!! GETHIDDENPROPERTY ISSUES !!
-		Your executor's gethiddenproperty couldn't read the types below, so this save might be missing data or have wrong values.
-		Please tell your executor's developers about this. Affected types:
-		]]
-					if #failedTypes > 0 then
-						ghpFailureHeader ..= "\t\tFailed reads: " .. service.HttpService:JSONEncode(failedTypes) .. "\n"
-					end
-					if #crashTypes > 0 then
-						ghpFailureHeader ..= "\t\tCrashed a previous run (now skipped entirely): " .. service.HttpService:JSONEncode(
-							crashTypes
-						) .. "\n"
-					end
-					ghpFailureHeader ..= "\n"
-				end
-
-				return table.concat({
-					"--[[\n",
-					"\t\tThank you for using UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw\n\n",
-					recoveredNote,
-					ghpFailureHeader,
-					binaryNote,
-					helpText,
-					service.HttpService:JSONEncode(OPTIONS),
-					metaFooter,
-					"\n]]",
-				})
-			end)
-		end
-
 		-- One collect over the main roots plus every extra's roots.
 		local allRoots = table.clone(ToSaveList)
 		for _, extra in pendingExtras do
@@ -5835,12 +5688,6 @@ local function synsaveinstance(...: any): ()
 			extra.collectedRoots = kept
 		end
 
-		if readmeExtra then
-			local readmeEntry = ctx.entries[readmeExtra.roots[1]]
-			if readmeEntry then
-				readmeEntry.deferLast = true -- emitBinary encodes this bucket after all others
-			end
-		end
 
 		-- Detach claimed subtrees. Mutates ctx, so it has to run before
 		-- the dispatch rather than inside either emitter.
@@ -5885,10 +5732,6 @@ local function synsaveinstance(...: any): ()
 		ctx.mainRoots = mainRoots
 
 		local chunks = OPTIONS.Binary and emitBinary(ctx) or emitXML(ctx)
-
-		if OPTIONS.ReadMe then
-			stampElapsed(chunks, os.clock() - elapse_t)
-		end
 
 		if CopyToClipboard then
 			setrbxclipboard(table.concat(chunks))
