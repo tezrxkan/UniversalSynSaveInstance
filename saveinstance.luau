@@ -4575,8 +4575,7 @@ local function synsaveinstance(...: any): ()
 			end
 		end
 
-		value = "-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw\n\n"
-			.. (hasLinkedSource and "-- Original Source: https://assetdelivery.roblox.com/v1/asset/?" .. (LinkedSource_type or "id") .. "=" .. (LinkedSource or LinkedSource_Url) .. "\n\n" or "")
+		value = (hasLinkedSource and "-- Original Source: https://assetdelivery.roblox.com/v1/asset/?" .. (LinkedSource_type or "id") .. "=" .. (LinkedSource or LinkedSource_Url) .. "\n\n" or "")
 			.. value
 
 		return value
@@ -5374,8 +5373,7 @@ local function synsaveinstance(...: any): ()
 	local function emitXML(ctx: {[string]: any}): string
 		local chunks = table.create(1)
 		local savebuffer, savebuffer_size = {}, 1
-		local header =
-			'<!-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw --><roblox version="4">'
+		local header = '<roblox version="4">'
 		local refs = ctx.refs
 
 		local function ReturnProperty(tag: string, propertyName: string, value: string): string
