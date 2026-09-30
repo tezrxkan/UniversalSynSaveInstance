@@ -4264,7 +4264,7 @@ local function synsaveinstance(...)
 		IsolateLocalPlayer = false
 	end
 
-	local function GetLocalPlayer()
+	local function GetLocalPlayer(): Player
 		return service.Players.LocalPlayer
 			or service.Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 			or service.Players.LocalPlayer
@@ -4503,7 +4503,7 @@ local function synsaveinstance(...)
 		end
 	end
 
-	local function filterLinkedSource(str)
+	local function filterLinkedSource(str: string): boolean?
 		local o, r = pcall(service.HttpService.JSONDecode, service.HttpService, str)
 		if o and r.errors then
 			return
@@ -4594,7 +4594,7 @@ local function synsaveinstance(...)
 		return value
 	end
 
-	local function replaceClassName(instance, InstanceName, ClassName)
+	local function replaceClassName(instance: Instance, InstanceName: string, ClassName: string): any
 		local InstanceOverride = InstancesOverrides[instance]
 
 		if InstanceOverride then
@@ -5954,10 +5954,10 @@ local function synsaveinstance(...)
 	end
 
 	local Connections = {}
-	local function Connect(event, func)
+	local function Connect(event: RBXScriptSignal, func: (...any) -> ()): RBXScriptConnection
 		table.insert(Connections, event:Connect(func))
 	end
-	local function Cleanup()
+	local function Cleanup(): ()
 		for _, connection in Connections do
 			connection:Disconnect()
 		end
@@ -5967,7 +5967,7 @@ local function synsaveinstance(...)
 		local Players = service.Players
 
 		if IgnoreList.Model ~= true then
-			local function ignoreCharacter(player)
+			local function ignoreCharacter(player: Player): ()
 				Connect(player.CharacterAdded, function(character)
 					IgnoreList[character] = true
 				end)
@@ -6008,7 +6008,7 @@ local function synsaveinstance(...)
 			local hookfunction = EXECUTOR_NAME ~= "Volt" and hookfunction
 
 			local done = {}
-			local function filterNkill(f)
+			local function filterNkill(f: () -> {any}): ()
 				if not f then
 					return
 				end
@@ -6085,7 +6085,7 @@ local function synsaveinstance(...)
 
 		StatusText.Parent = StatusGui
 
-		local function randomString()
+		local function randomString(): string
 			local length = math.random(10, 20)
 			local randomarray = table.create(length)
 			for i = 1, length do
@@ -6153,7 +6153,7 @@ local function synsaveinstance(...)
 
 			local msg =
 				"[SAVEINSTANCE SAFEMODE]\nSaving..\nDo NOT leave\nLVL7 Executor RECOMMENDED for more SAFETY\nTo Disable this: SafeMode=false (Less Protection)"
-			local function Kick()
+			local function Kick(): ()
 				LocalPlayer:Kick(msg)
 			end
 
