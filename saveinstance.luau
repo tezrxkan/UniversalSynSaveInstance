@@ -4298,7 +4298,7 @@ local function synsaveinstance(...)
 
 	local IsLoading, LoadingText, LoadingThread = false
 
-	local function ensureSpinner()
+	local function ensureSpinner(): ()
 		if LoadingThread then
 			return
 		end
@@ -4356,7 +4356,7 @@ local function synsaveinstance(...)
 		local worker
 		local pendingJob
 
-		local function spawnWorker()
+		local function spawnWorker(): thread
 			return task.spawn(function()
 				while true do
 					while not pendingJob do
@@ -4510,7 +4510,7 @@ local function synsaveinstance(...)
 		end
 		return true
 	end
-	local function sourceFor(instance, ldIgnoring)
+	local function sourceFor(instance: Instance, ldIgnoring: any): string?
 		if ldIgnoring then
 			return "-- Ignored"
 		end
@@ -4609,13 +4609,13 @@ local function synsaveinstance(...)
 		return InstanceOverride
 	end
 
-	local function isClassSerializable(className)
+	local function isClassSerializable(className: string): boolean
 		local known = ClassSerializableCache[className]
 		if known ~= nil then
 			return known
 		end
 
-		local function getSerialized(name)
+		local function getSerialized(name: string): boolean
 			return pcall(function()
 				return service.ReflectionService:GetClass(name, REFLECTION_FILTER).Serialized -- ! Some execs (like Xeno) error on ReflectionService due to their ProxyService
 			end)
@@ -4636,7 +4636,7 @@ local function synsaveinstance(...)
 		return serializable
 	end
 
-	local function refIsInvalid(target, valueType)
+	local function refIsInvalid(target: any, valueType: string): boolean
 		if not target then
 			return false
 		end
@@ -4654,7 +4654,7 @@ local function synsaveinstance(...)
 		return fix ~= nil and (valueType ~= "Instance" and valueType ~= fix)
 	end
 
-	local function nilIsValid(category, optional)
+	local function nilIsValid(category: string, optional: boolean): boolean
 		return optional ~= nil or category == "Class"
 	end
 
@@ -4707,14 +4707,14 @@ local function synsaveinstance(...)
 		end
 	end
 
-	local function saveGHPState()
+	local function saveGHPState(): ()
 		if not writefile then
 			return
 		end
 		pcall(writefile, GHP_STATE_FILE, service.HttpService:JSONEncode({ [GHPVersionKey] = GHPPersisted }))
 	end
 
-	local function ghpDatatypeAllowed(valueType)
+	local function ghpDatatypeAllowed(valueType: string): boolean
 		local state = GHPDatatypeState[valueType]
 		if state ~= nil then
 			return state
@@ -4745,7 +4745,7 @@ local function synsaveinstance(...)
 		return state
 	end
 
-	local function ghpDatatypeReport(valueType, ok)
+	local function ghpDatatypeReport(valueType: string, ok: boolean): ()
 		local wantState = ok and "ok" or "failed"
 		if GHPPersisted[valueType] == wantState then
 			return
@@ -6119,14 +6119,14 @@ local function synsaveinstance(...)
 		GLOBAL_ENV.USSI_kicksnapshot = kickSnapshot
 	end
 
-	local function snapshotKick(LocalPlayer)
+	local function snapshotKick(LocalPlayer: Player): ()
 		local cached = kickSnapshot[LocalPlayer]
 
 		if not cached then
 			cached = { [LocalPlayer] = LocalPlayer:GetChildren() }
 
 			local ps = LocalPlayer:FindFirstChildOfClass("PlayerScripts")
-			local function walk(inst)
+			local function walk(inst: Instance): {Instance}
 				local kids = inst:GetChildren()
 				cached[inst] = kids
 				for _, child in kids do
@@ -6173,7 +6173,7 @@ local function synsaveinstance(...)
 		end
 	end
 
-	local function childrenOf(instance)
+	local function childrenOf(instance: Instance): {Instance}
 		local override = InstancesOverrides[instance]
 		return override and override.__Children or instance:GetChildren()
 	end
@@ -6412,7 +6412,7 @@ local function synsaveinstance(...)
 				return ranking[1].f
 			end
 
-			local function pickFastestBy(label, candidates, works, iters, benchInput, ...)
+			local function pickFastestBy(label: string, candidates: {string}, works: {(...any) -> boolean}, iters: number, benchInput: any, ...: any): (...any) -> any
 				local valid = {}
 				for _, f in candidates do
 					if f then
@@ -6473,7 +6473,7 @@ local function synsaveinstance(...)
 
 			local BASE64_TEST = string.rep("\1\0\0\0\1\2\3\4\5\6\7", 50)
 
-			local function b64EncWorks(f)
+			local function b64EncWorks(f: (string) -> string): boolean
 				return f("\1\0\0\0\1") == "AQAAAAE="
 			end
 
