@@ -3087,7 +3087,7 @@ do
 				end
 
 				-- ! Assumes Normal dumps never include Default; Full dumps always do.
-				local function isFullDump(classes)
+				local function isFullDump(classes: {[string]: any}): boolean
 					for _, class in classes do
 						for _, member in class.Members do
 							if member.MemberType == "Property" then
@@ -3098,7 +3098,7 @@ do
 					return false -- no properties found at all; treat as inconclusive/not full
 				end
 
-				local function tryFetchDump(url)
+				local function tryFetchDump(url: string): ({[string]: any}?, string?)
 					local ok, decoded = pcall(function()
 						local raw = game:HttpGet(url, true)
 						return service.HttpService:JSONDecode(raw)
@@ -4898,7 +4898,7 @@ local function synsaveinstance(...)
 	--   tag       -- written as the class name (XML). May be an unknown class.
 	--   class     -- the resolved, instantiable class (binary INST). Never unknown.
 	--   propClass -- whose property list to read (union rewrite points elsewhere)
-	local function collect(roots)
+	local function collect(roots: {any}): {[string]: any}
 		local ctx = {
 			entries = {},
 			classList = {},
@@ -4911,7 +4911,7 @@ local function synsaveinstance(...)
 		local entries, classList = ctx.entries, ctx.classList
 		local ordered, refs = ctx.ordered, ctx.refs
 
-		local function recur(instance, parent, ldIgnore)
+		local function recur(instance: Instance, parent: Instance?, ldIgnore: any): ()
 			if entries[instance] then
 				return -- already collected via another root
 			end
@@ -5083,7 +5083,7 @@ local function synsaveinstance(...)
 		return extra
 	end
 
-	local function emitBinary(ctx)
+	local function emitBinary(ctx: {[string]: any}): string
 		local function readAll(objs, prop)
 			local n = #objs
 			local vals = table.create(n)
@@ -6491,7 +6491,7 @@ local function synsaveinstance(...)
 				return
 			end
 
-			local function b64DecWorks(f)
+			local function b64DecWorks(f: (string) -> string): boolean
 				return f("AQAAAAE=") == "\1\0\0\0\1"
 			end
 
@@ -6505,7 +6505,7 @@ local function synsaveinstance(...)
 
 			local HttpService = service.HttpService
 
-			local function http_zstdcompress(input)
+			local function http_zstdcompress(input: string): string?
 				local ok, encoded = pcall(HttpService.JSONEncode, HttpService, buffer.fromstring(input)) -- pcall due to ~100mb limit
 				if not ok then
 					return nil
@@ -6545,7 +6545,7 @@ local function synsaveinstance(...)
 				COMPRESS_TEST = table.concat(planes)
 			end
 
-			local function zstdWorks(f)
+			local function zstdWorks(f: (string) -> string): boolean
 				local out = f(COMPRESS_TEST)
 				return type(out) == "string" and #out > 4 and string.sub(out, 1, 4) == "\40\181\47\253"
 			end
@@ -6570,7 +6570,7 @@ local function synsaveinstance(...)
 
 			local LZ4_PROBE = "\1\2\3\4\5\6\7\8"
 
-			local function lz4Works(f)
+			local function lz4Works(f: (string) -> string): boolean
 				local out = f(LZ4_PROBE)
 				return type(out) == "string"
 					and #out == #LZ4_PROBE + 1
