@@ -3980,7 +3980,7 @@ local function synsaveinstance(...)
 		return fn and fn(raw) or raw
 	end
 
-	local function gsubCaseInsensitive(input, search, replacement)
+	local function gsubCaseInsensitive(input: string, search: string, replacement: string): string
 		local inputLower = string.lower(input)
 		search = string.lower(search)
 
@@ -4658,7 +4658,7 @@ local function synsaveinstance(...)
 		return optional ~= nil or category == "Class"
 	end
 
-	local function filterPropVal(result, property, category, optional) -- ? raw == nil thanks to SerializedDefaultAttributes; "can't get value" - due to WriteOnly tag;  "Invalid value for enum " - "StreamingPauseMode" (old games probably) Roexec
+	local function filterPropVal(result: any, property: string, category: string, optional: boolean): boolean -- ? raw == nil thanks to SerializedDefaultAttributes; "can't get value" - due to WriteOnly tag;  "Invalid value for enum " - "StreamingPauseMode" (old games probably) Roexec
 		if result == nil then
 			return not nilIsValid(category, optional)
 		end
@@ -4755,7 +4755,7 @@ local function synsaveinstance(...)
 		saveGHPState()
 	end
 
-	local function readProperty(instance, property)
+	local function readProperty(instance: Instance, property: any): any
 		local PropertyName, ValueType, CanRead, Special =
 			property.Name, property.ValueType, property.CanRead, property.Special
 
@@ -4876,7 +4876,7 @@ local function synsaveinstance(...)
 		return __BREAK
 	end
 
-	local function GetInheritedProps(className)
+	local function GetInheritedProps(className: string): {any}
 		local cached = inheritedProperties[className]
 		if cached then
 			return cached
@@ -5084,7 +5084,7 @@ local function synsaveinstance(...)
 	end
 
 	local function emitBinary(ctx: {[string]: any}): string
-		local function readAll(objs, prop)
+		local function readAll(objs: {Instance}, prop: string): {[string]: any}
 			local n = #objs
 			local vals = table.create(n)
 
@@ -5099,7 +5099,7 @@ local function synsaveinstance(...)
 			return vals
 		end
 
-		local function buildChunk(name, chunkBuf, compress)
+		local function buildChunk(name: string, chunkBuf: buffer, compress: boolean): string
 			local uncompressedLen = chunkBuf.len
 			local head = buffer.create(16)
 			buffer.writestring(head, 0, name)
@@ -5141,7 +5141,7 @@ local function synsaveinstance(...)
 
 		local lastStatus = 0
 
-		local function emit(chunk)
+		local function emit(chunk: string): ()
 			chunks[#chunks + 1] = chunk
 			totalsize += chunk.len + (chunk.str and #chunk.str or chunk.tailLen or 0)
 
@@ -5182,7 +5182,7 @@ local function synsaveinstance(...)
 		local classId = 0
 		local deferredBuckets
 
-		local function encode_class_bucket(objs)
+		local function encode_class_bucket(objs: {Instance}): string
 			local n = #objs
 			local entry = entries[objs[1]]
 
@@ -5383,27 +5383,27 @@ local function synsaveinstance(...)
 		return out
 	end
 
-	local function emitXML(ctx)
+	local function emitXML(ctx: {[string]: any}): string
 		local chunks = table.create(1)
 		local savebuffer, savebuffer_size = {}, 1
 		local header =
 			'<!-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw --><roblox version="4">'
 		local refs = ctx.refs
 
-		local function ReturnProperty(tag, propertyName, value)
+		local function ReturnProperty(tag: string, propertyName: string, value: string): string
 			return "<" .. tag .. ' name="' .. propertyName .. '">' .. value .. "</" .. tag .. ">"
 		end
 
-		local function ReturnValueAndTag(raw, valueType, encoder)
+		local function ReturnValueAndTag(raw: any, valueType: string, encoder: (any) -> (any, string?)): (any, string?)
 			local value, tag = (encoder or XML_Encoders[valueType])(raw)
 			return value, tag or valueType
 		end
 
-		local function ReturnItem(className, instance)
+		local function ReturnItem(className: string, instance: Instance): string
 			return '<Item class="' .. className .. '" referent="' .. refs[instance] .. '"><Properties>' -- TODO: Ideally this shouldn't return <Properties> as well as the line below to close it IF  IgnorePropertiesOfNotScriptsOnScriptsMode is Enabled OR If all properties are default (reduces file size by at least 1.4%)
 		end
 
-		local function save_cache()
+		local function save_cache(): ()
 			local savestr = table.concat(savebuffer)
 
 			local savestr_len = #savestr
@@ -5421,7 +5421,7 @@ local function synsaveinstance(...)
 			wait_for_render()
 		end
 
-		local function save_hierarchy(hierarchy, ctx)
+		local function save_hierarchy(hierarchy: {Instance}, ctx: {[string]: any}): ()
 			local entries = ctx.entries
 
 			for _, instance in hierarchy do
@@ -5680,7 +5680,7 @@ local function synsaveinstance(...)
 		local ELAPSED_PLACEHOLDER = "@@ELAPSED" .. string.gsub(service.HttpService:GenerateGUID(false), "-", "") .. "@@"
 		local ELAPSED_WIDTH = "%-" .. #ELAPSED_PLACEHOLDER .. "s"
 
-		local function stampElapsed(chunks, seconds)
+		local function stampElapsed(chunks: {string}, seconds: number): string
 			local repl = string.format(ELAPSED_WIDTH, string.format("%.6f seconds", seconds))
 			if #repl ~= #ELAPSED_PLACEHOLDER then
 				return
@@ -5901,7 +5901,7 @@ local function synsaveinstance(...)
 			local SEGMENT_SIZE = 4145728
 			local batch, batchSize, written = {}, 0, 0
 
-			local function flush()
+			local function flush(): ()
 				if batchSize == 0 then
 					return
 				end
