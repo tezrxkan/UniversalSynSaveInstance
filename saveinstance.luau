@@ -4297,7 +4297,7 @@ local function synsaveinstance(...: any): ()
 			return
 		end
 		LoadingThread = task.spawn(function()
-			local chars = { "|", "/", "ΓÇö", "\\" }
+			local chars = { "|", "/", "—", "\\" }
 			local i = 0
 			while true do
 				while not IsLoading do
