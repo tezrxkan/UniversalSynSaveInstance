@@ -3641,7 +3641,7 @@ end
 	@param Parameter_2 table -- [OPTIONAL] If present, then Parameter_2 will be assumed to be [SynSaveInstance.CustomOptions table]. And then if the Parameter_1 is an Instance, then it will be assumed to be [SynSaveInstance.CustomOptions table].Object. If Parameter_1 is a table filled with instances ({Instance}), then it will be assumed to be [SynSaveInstance.CustomOptions table].ExtraInstances and IsModel will be true). This exists for sake compatibility with `saveinstance(game, {})`
 ]=]
 
-local function synsaveinstance(...)
+local function synsaveinstance(...: any): ()
 	if GLOBAL_ENV.USSI then
 		return
 	end
@@ -6397,7 +6397,7 @@ local function synsaveinstance(...)
 				end
 			end
 
-			local function benchmark(funcs, iters, ...)
+			local function benchmark(funcs: {(...any) -> (...any)}, iters: number, ...: any): (...any) -> (...any)
 				local ranking = table.create(3)
 				for i, f in funcs do
 					local start = os.clock()
