@@ -30,28 +30,16 @@ This project is provided for development, debugging, archival, and research purp
 
 It is not intended for misuse, including violating platform rules, unauthorized access, or redistribution of content without permission.
 
-Users are responsible for ensuring their usage complies with all applicable rules, including RobloxΓÇÖs Terms of Use.
+Users are responsible for ensuring their usage complies with all applicable rules, including Roblox's Terms of Use.
 
 The maintainers do not support or condone misuse of this software and are not responsible for how it is used.
 
 > [!TIP]
-> If this script is helpful to you, please click `Γ¡É Star` in the upper right corner of the page to support it, thank you!
+> If this script is helpful to you, please click `⭐ Star` in the upper right corner of the page to support it, thank you!
 
 # Documentation
 
 [Documentation]
-
-# ≡ƒÆû Support Us & Our Work
-
-<a href='https://ko-fi.com/M4M1JNH5G' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi2.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' title='KO-FI' /></a>
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M1JNH5G "KO-FI")
-<br />
-[![ko-fi](https://user-images.githubusercontent.com/95628489/231759262-25661006-b7ca-4967-a79d-2b465cd9575a.png)](https://ko-fi.com/M4M1JNH5G "KO-FI QR-CODE")
-
-# DISCORD SERVER:<br />
-
-<https://discord.com/invite/wx4ThpAsmw> **/** <https://discord.gg/wx4ThpAsmw><br />
-[<img src="https://discordapp.com/api/guilds/1022465460517740654/widget.png?style=banner2" alt="Our Official Discord Server!"></img>](https://discord.com/invite/wx4ThpAsmw)<br />
 
 # TO-DOs
 
@@ -64,7 +52,7 @@ The maintainers do not support or condone misuse of this software and are not re
   - [x] Compound Operators
   - [x] Avoid using `next`, `ipairs` & `pairs`
   - [x] ~~Interpolated strings instead of concat~~ Slower
-  - [ ] Type-checking (≡ƒÿ⌐≡ƒÖÇ)
+  - [ ] Type-checking (😩🙀)
   - [ ] ~~`if-then-else` expressions~~ No reason to
   - [ ] Floor division
 
@@ -109,7 +97,7 @@ resources include:
 > - [Roblox File Format] for a list of redirects of old/deprecated xml properties that still use the old tag values
 > - [Roblox Client Tracker] for an extended & close to full JSON Api Dump (with hidden properties & default values)
 
-\*\*\* View source code of this file for more credits
+*** View source code of this file for more credits
 
 [Documentation]: https://luau.github.io/UniversalSynSaveInstance/api/SynSaveInstance
 [@Acrillis]: https://github.com/Acrillis
