@@ -1,7 +1,6 @@
 --!native
 --!optimize 2
 --!divine-intellect
--- https://discord.gg/wx4ThpAsmw
 
 local function arrayToDict(t: {[any]: any}, mixedMode: boolean, valueOverride: any, typeStrict: string?): {[any]: any}
 	local tmp: {[any]: any} = {}
