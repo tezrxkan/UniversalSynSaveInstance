@@ -3,11 +3,6 @@
 --!divine-intellect
 -- https://discord.gg/wx4ThpAsmw
 
-local function pcall_index(obj: any, key: any): any
-	local ok, result = pcall(index, obj, key)
-	return ok and result or nil
-end
-
 local function arrayToDict(t: {[any]: any}, mixedMode: boolean, valueOverride: any, typeStrict: string?): {[any]: any}
 	local tmp: {[any]: any} = {}
 
@@ -129,6 +124,11 @@ local defaultInstances: {[string]: {[string]: any}} = {}
 
 local function index(self: any, index_name: any): any
 	return self[index_name]
+end
+
+local function pcall_index(obj: any, key: any): any
+	local ok, result = pcall(index, obj, key)
+	return ok and result or nil
 end
 
 local function pcall_get(func: (...any) -> (...any), ...: any): ...any
