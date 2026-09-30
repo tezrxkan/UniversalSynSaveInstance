@@ -3,12 +3,13 @@
 --!divine-intellect
 -- https://discord.gg/wx4ThpAsmw
 
-local function string_find(s, pattern, init)
-	return string.find(s, pattern, init, true)
+local function pcall_index(obj: any, key: any): any
+	local ok, result = pcall(index, obj, key)
+	return ok and result or nil
 end
 
-local function arrayToDict(t, mixedMode, valueOverride, typeStrict)
-	local tmp = {}
+local function arrayToDict(t: {[any]: any}, mixedMode: boolean, valueOverride: any, typeStrict: string?): {[any]: any}
+	local tmp: {[any]: any} = {}
 
 	if mixedMode then
 		for any1, any2 in t do
@@ -111,22 +112,31 @@ local getscriptbytecode = global_container.getscriptbytecode -- * A lot of assum
 local base64encode = global_container.base64encode
 local base64decode = global_container.base64decode
 
-local sharedStringId = 1e15 -- 1 quadrillion, up to 9.(9) quadrillion, in theory this shouldn't ever run out and be enough for all sharedstrings ever imaginable 	-- TODO: worst case, add fallback to str randomizer once numbers run out : )
-local sharedStrings = setmetatable({}, {
-	__index = function(self, str)
-		local id = base64encode(tostring(sharedStringId)) -- tostring is only needed for built-in base64encode, Luau base64 implementations don't need it as buffers autoconvert
+local SHARED_STRING_START_ID = 1e15
+local sharedStringId = SHARED_STRING_START_ID
+local sharedStrings: {[string]: string} = setmetatable({}, {
+	__index = function(self: any, str: string): string
+		local id = base64encode(tostring(sharedStringId))
 		sharedStringId += 1
 
-		self[str] = id -- ? The value of the md5 attribute is a Base64-encoded key. <SharedString> type elements use this key to refer to the value of the string. The value is the text content, which is Base64-encoded. Historically, the key was the MD5 hash of the string value. However, this is not required; the key can be any value that will uniquely identify the shared string. Roblox currently uses BLAKE2b truncated to 16 bytes..
+		self[str] = id
 		return id
 	end,
 })
 
-local inheritedProperties = {}
-local defaultInstances = {}
+local inheritedProperties: {[string]: {any}} = {}
+local defaultInstances: {[string]: {[string]: any}} = {}
 
-local function index(self, index_name)
+local function index(self: any, index_name: any): any
 	return self[index_name]
+end
+
+local function pcall_get(func: (...any) -> (...any), ...: any): ...any
+	local ok, result = pcall(func, ...)
+	if ok then
+		return result
+	end
+	return nil
 end
 
 local cachedPlaceName = GLOBAL_ENV.USSI_placeName
@@ -147,21 +157,24 @@ end) then
 	end
 end
 
-local CLIENT_VERSION = tonumber(string.match(FULL_VERSION, "%d+%.(%d+)")) or 9e9
-local __BREAK = "__BREAK" .. service.HttpService:GenerateGUID(false)
+local FALLBACK_CLIENT_VERSION = 9e9
+local CLIENT_VERSION = tonumber(string.match(FULL_VERSION, "%d+%.(%d+)")) or FALLBACK_CLIENT_VERSION
+local BREAK_PREFIX = "__BREAK"
+local __BREAK = BREAK_PREFIX .. service.HttpService:GenerateGUID(false)
 local USSI_FOLDER = "ussi_cache/"
+local USSI_CACHE_FOLDER = USSI_FOLDER
 
 pcall(function()
 	makefolder(USSI_FOLDER)
 end)
 
-local REFLECTION_FILTER = {
+local REFLECTION_FILTER: {[string]: any} = {
 	Security = SecurityCapabilities.new(unpack(Enum.SecurityCapability:GetEnumItems())),
 	ExcludeDisplay = true,
 	ExcludeInherited = true,
 }
 
-local Type_Ids = {
+local Type_Ids: {[string]: number} = {
 	["string"] = 1,
 	["bool"] = 2,
 	["int"] = 3,
@@ -178,7 +191,6 @@ local Type_Ids = {
 	["Vector3"] = 14,
 	["Vector2int16"] = 15,
 	["CFrame"] = 16,
-	-- ["CFrameQuat"] = 17,
 	["Enum"] = 18,
 	["Referent"] = 19,
 	["Vector3int16"] = 20,
@@ -190,25 +202,22 @@ local Type_Ids = {
 	["Color3uint8"] = 26,
 	["int64"] = 27,
 	["SharedString"] = 28,
-	-- ["Bytecode"] = 29,
 	["OptionalCoordinateFrame"] = 30,
 	["UniqueId"] = 31,
 	["Font"] = 32,
 	["SecurityCapabilities"] = 33,
 	["Content"] = 34,
-	-- ["AssetContentMap"] = 35, -- TODO
 }
 
-local Attribute_Type_Ids =
-	{ -- ValueCurveKey & StyleRule.PropertiesSerialize can be used to explore types unsupported by attributes, as they share the same serializer
+local Attribute_Type_Ids: {[string]: number} =
+	{
 		["nil"] = 0x01,
 		string = 0x02,
 		boolean = 0x03,
 		int32 = 0x04,
-		-- float = 0x05, -- float32
-		number = 0x06, -- float64 (double)
+		number = 0x06,
 		ValueArray = 0x07,
-		ValueTable = 0x08, -- Dictionary
+		ValueTable = 0x08,
 		UDim = 0x09,
 		UDim2 = 0x0A,
 		Ray = 0x0B,
@@ -222,7 +231,6 @@ local Attribute_Type_Ids =
 		Vector3int16 = 0x13,
 		CFrame = 0x14,
 		EnumItem = 0x15,
-		-- 0x16
 		NumberSequence = 0x17,
 		NumberSequenceKeypoint = 0x18,
 		ColorSequence = 0x19,
@@ -237,10 +245,9 @@ local Attribute_Type_Ids =
 		SecurityCapabilities = 0x22,
 		Path2DControlPoint = 0x23,
 		TweenInfo = 0x24,
-		-- InstanceHandle = 0x25,
 	}
 
-local CFrame_Rotation_Ids = {
+local CFrame_Rotation_Ids: {[string]: number} = {
 	["\0\0\128\63\0\0\0\0\0\0\0\0\0\0\0\0\0\0\128\63\0\0\0\0\0\0\0\0\0\0\0\0\0\0\128\63"] = 0x02,
 	["\0\0\128\63\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\128\191\0\0\0\0\0\0\128\63\0\0\0\0"] = 0x03,
 	["\0\0\128\63\0\0\0\0\0\0\0\0\0\0\0\0\0\0\128\191\0\0\0\0\0\0\0\0\0\0\0\0\0\0\128\191"] = 0x05,
@@ -266,10 +273,11 @@ local CFrame_Rotation_Ids = {
 	["\0\0\0\0\0\0\128\191\0\0\0\0\0\0\0\0\0\0\0\0\0\0\128\63\0\0\128\191\0\0\0\0\0\0\0\0"] = 0x22,
 	["\0\0\0\0\0\0\0\0\0\0\128\191\0\0\0\0\0\0\128\191\0\0\0\128\0\0\128\191\0\0\0\0\0\0\0\128"] = 0x23,
 }
-local rotationBuffer = buffer.create(36)
+local ROTATION_BUFFER_SIZE = 36
+local rotationBuffer = buffer.create(ROTATION_BUFFER_SIZE)
 local bf32_rotation = buffer.writef32
 
-local function rawBasisString(r00, r01, r02, r10, r11, r12, r20, r21, r22)
+local function rawBasisString(r00: number, r01: number, r02: number, r10: number, r11: number, r12: number, r20: number, r21: number, r22: number): string
 	bf32_rotation(rotationBuffer, 0, r00)
 	bf32_rotation(rotationBuffer, 4, r01)
 	bf32_rotation(rotationBuffer, 8, r02)
@@ -282,12 +290,13 @@ local function rawBasisString(r00, r01, r02, r10, r11, r12, r20, r21, r22)
 	return buffer.tostring(rotationBuffer)
 end
 
-local EMPTY_BUFFER = buffer.create(0)
-local BASE_CAPABILITIES
+local EMPTY_BUFFER_SIZE = 0
+local EMPTY_BUFFER = buffer.create(EMPTY_BUFFER_SIZE)
+local BASE_CAPABILITIES: any
 pcall(function()
 	BASE_CAPABILITIES = SecurityCapabilities.new()
 end)
-local CAPABILITY_BITS = {
+local CAPABILITY_BITS: {[string]: number} = {
 	Plugin = 0,
 	LocalUser = 1,
 	WritePlayer = 2,
@@ -344,12 +353,7 @@ local CAPABILITY_BITS = {
 	Restricted = 63,
 }
 
-local function capabilityHalves(raw)
-	-- TODO tostring & string.split aren't ideal but this is the only way until the feature is out of the experimental phase (SecurityCapabilities.Contains exists but the Enums that it accepts lacks some hidden bits) - NotAccessible, Unknown, Restricted
-	-- ! Seems like both tostring & .Contains ignore high / internal bits (anything above CapabilityControl): RemoteCommand, InternalTest, PluginOrOpenCloud, Assistant. They're present when created & saved by Studio but can't be read through current means
-
-	-- TODO Use https://rfcs.luau.org/type-long-integer.html once released to avoid overflow beyond ^53
-
+local function capabilityHalves(raw: any): (number, number)
 	local lo, hi = 0, 0
 	for _, flag in string.split(tostring(raw), " | ") do
 		local b = CAPABILITY_BITS[flag]
@@ -364,12 +368,12 @@ local function capabilityHalves(raw)
 	return lo, hi
 end
 
-local function capabilityNumber(raw)
+local function capabilityNumber(raw: any): number
 	local lo, hi = capabilityHalves(raw)
 	return hi * 0x100000000 + lo
 end
 
-local function countBits(...)
+local function countBits(...: any): number
 	local Value = 0
 
 	for i, bit in { ... } do
@@ -381,7 +385,7 @@ local function countBits(...)
 	return Value
 end
 
-local function cframeToQuaternion(cframe)
+local function cframeToQuaternion(cframe: CFrame): (number, number, number, number)
 	local _, _, _, R00, R01, R02, R10, R11, R12, R20, R21, R22 = cframe:GetComponents()
 	local trace = R00 + R11 + R22
 	local S, qW, qX, qY, qZ
@@ -417,7 +421,7 @@ local function cframeToQuaternion(cframe)
 	return qX, qY, qZ, qW
 end
 
-local function classifyTable(t)
+local function classifyTable(t: {any}): string
 	local len = #t
 	if len == 0 then
 		len = nil
@@ -429,7 +433,7 @@ local function classifyTable(t)
 	end
 end
 
-local function resolveTypeName(value)
+local function resolveTypeName(value: any): string
 	local t = typeof(value)
 	if t == "table" then
 		return classifyTable(value)
@@ -438,29 +442,30 @@ local function resolveTypeName(value)
 end
 
 -- Scalar transforms
-local scratch = buffer.create(8)
+local SCRATCH_BUFFER_SIZE = 8
+local scratch = buffer.create(SCRATCH_BUFFER_SIZE)
 
 -- Big-endian bit-rotated f32, no allocations.
 local bf32, ru32 = buffer.writef32, buffer.readu32
 local lr32 = bit32.lrotate
 
-local function rotf(v)
+local function rotf(v: number): number
 	bf32(scratch, 0, v)
 	return lr32(ru32(scratch, 0), 1)
 end
 
-local function zigzag32(v)
+local function zigzag32(v: number): number
 	return (v < 0) and (2 * -v - 1) or (2 * v)
 end
 
-local function splitU64(v)
+local function splitU64(v: number): (number, number)
 	local hi = math.floor(v / 4294967296)
 	return hi, v - hi * 4294967296
 end
 
 -- 64-bit zigzag from a Lua number. Doubling happens on the halves so it
 -- never round-trips through a double.
-local function zigzag64(v)
+local function zigzag64(v: number): (number, number)
 	local neg = v < 0
 	local hi, lo = splitU64(neg and -v or v)
 
@@ -468,7 +473,7 @@ local function zigzag64(v)
 	lo = bit32.lshift(lo, 1)
 	hi = bit32.bor(bit32.lshift(hi, 1), carry)
 
-	if neg then -- magnitude is >= 1, so this can't underflow
+	if neg then
 		if lo == 0 then
 			lo, hi = 0xFFFFFFFF, hi - 1
 		else
@@ -480,7 +485,7 @@ end
 
 -- 64-bit zigzag from u32 halves. No arithmetic, so `Restricted` (bit 63) --
 -- which makes the value negative as an i64 -- falls out correctly.
-local function zigzagHalves(hi, lo)
+local function zigzagHalves(hi: number, lo: number): (number, number)
 	local sign = bit32.extract(hi, 31)
 	local shi = bit32.bor(bit32.lshift(hi, 1), bit32.extract(lo, 31))
 	local slo = bit32.lshift(lo, 1)
@@ -490,13 +495,13 @@ local function zigzagHalves(hi, lo)
 	return shi, slo
 end
 
-local function u32FromHex(hex, at)
+local function u32FromHex(hex: string, at: number): number
 	return tonumber(string.sub(hex, at, at + 7), 16)
 end
 
 -- Byte-plane writers
 
-local function pokeU32Planes(sbuf, o, n, v)
+local function pokeU32Planes(sbuf: any, o: number, n: number, v: number)
 	local buf = sbuf.buf
 	local wu8 = buffer.writeu8
 	local rshift = bit32.rshift
@@ -506,12 +511,12 @@ local function pokeU32Planes(sbuf, o, n, v)
 	wu8(buf, o + 3 * n, v)
 end
 
-local function pokeU64Planes(sbuf, o, n, hi, lo)
+local function pokeU64Planes(sbuf: any, o: number, n: number, hi: number, lo: number)
 	pokeU32Planes(sbuf, o, n, hi)
 	pokeU32Planes(sbuf, o + 4 * n, n, lo)
 end
 
-local function interleavedU32Plane(sbuf, n, base, getU32ForIndex)
+local function interleavedU32Plane(sbuf: any, n: number, base: number, getU32ForIndex: (number) -> number)
 	local buf = sbuf.buf
 	local rshift = bit32.rshift
 	local wu8 = buffer.writeu8
@@ -527,7 +532,7 @@ end
 
 -- Zigzag-delta referent plane. Every referent array in the format is this:
 -- INST referents, PRNT object/parent, Referent props, Content ObjectRefs.
-local function writeRefPlane(sbuf, n, base, getRef)
+local function writeRefPlane(sbuf: any, n: number, base: number, getRef: (number) -> number)
 	local buf = sbuf.buf
 	local rshift = bit32.rshift
 	local wu8 = buffer.writeu8
@@ -547,12 +552,12 @@ end
 
 -- Encoder factories
 
-local function planeEncoder(...)
+local function planeEncoder(...: (any) -> number): (any, {any}, number) -> ()
 	local getters = { ... }
 	local k = #getters
 	local rshift = bit32.rshift
 	local wu8 = buffer.writeu8
-	return function(sbuf, vals, n)
+	return function(sbuf: any, vals: {any}, n: number)
 		local base = sbuf:allocRegion(4 * k * n)
 		local buf = sbuf.buf
 		local stride = 4 * n
@@ -571,11 +576,11 @@ local function planeEncoder(...)
 	end
 end
 
-local function f32Encoder(...)
+local function f32Encoder(...: (any) -> number): (any, {any}, number) -> ()
 	local paths = { ... }
 	local k = #paths
 	local wf32 = buffer.writef32
-	return function(sbuf, vals, n)
+	return function(sbuf: any, vals: {any}, n: number)
 		local base = sbuf:allocRegion(4 * k * n)
 		local buf = sbuf.buf
 		for i = 1, n do
@@ -589,11 +594,11 @@ local function f32Encoder(...)
 	end
 end
 
-local function i16Encoder(...)
+local function i16Encoder(...: string): (any, {any}, number) -> ()
 	local comps = { ... }
 	local k = #comps
 	local wi16 = buffer.writei16
-	return function(sbuf, vals, n)
+	return function(sbuf: any, vals: {any}, n: number)
 		local base = sbuf:allocRegion(2 * k * n)
 		local buf = sbuf.buf
 		for i = 1, n do
@@ -607,8 +612,8 @@ local function i16Encoder(...)
 	end
 end
 
-local function flagEncoder(bits)
-	return function(sbuf, vals, n)
+local function flagEncoder(bits: {[string]: number}): (any, {any}, number) -> ()
+	return function(sbuf: any, vals: {any}, n: number)
 		local base = sbuf:allocRegion(n)
 		local buf = sbuf.buf
 		local wu8 = buffer.writeu8
@@ -625,7 +630,7 @@ local function flagEncoder(bits)
 	end
 end
 
-local function writeCFrameBody(sbuf, vals, n, optional)
+local function writeCFrameBody(sbuf: any, vals: {any}, n: number, optional: boolean?)
 	local coordsX, coordsY, coordsZ = table.create(n), table.create(n), table.create(n)
 	local wu8, wstr = sbuf.writeu8, sbuf.writestring
 	local identity = CFrame.identity
@@ -672,7 +677,7 @@ local function writeCFrameBody(sbuf, vals, n, optional)
 	end
 end
 
-local Attribute_Encoders
+local Attribute_Encoders: {[string]: (any) -> (buffer, number)}
 Attribute_Encoders = {
 	_packMultiple = function(encoder, value1, value2, value3)
 		local buf1, size1 = encoder(value1)
@@ -1108,7 +1113,8 @@ do -- Vectors
 	Attribute_Encoders._packI16 = Attribute_Encoders._makeVectorPacker(buffer.writei16, 2)
 end
 
-local Binary_Encoders = {
+local Binary_Encoders: {[string]: (any, {any}, number, any?) -> ()}
+Binary_Encoders = {
 	["string"] = function(sbuf, vals, n)
 		local total = 4 * n
 		for i = 1, n do
@@ -1429,13 +1435,8 @@ do
 	Binary_Encoders[datatype] = Binary_Encoders[sameAs]
 end
 
-local ESCAPES_PATTERN = "[&<>\"'\0\1-\9\11-\12\14-\31\127-\255]" -- * The safe way is to escape all five characters in text. However, the three characters " ' and > needn't be escaped in text
--- %z (\0 aka NULL) might not be needed as Roblox automatically converts it to space everywhere it seems like
--- Characters from: https://create.roblox.com/docs/en-us/ui/rich-text#escape-forms
--- * EscapesPattern should be ordered from most common to least common characters for sake of speed
--- * Might wanna use their numerical codes instead of named codes for reduced file size (Could be an Option)
--- TODO Maybe we should invert the pattern to only allow certain characters (future-proof)
-local ESCAPES = {
+local ESCAPES_PATTERN = "[&<>\"'\0\1-\9\11-\12\14-\31\127-\255]"
+local ESCAPES: {[string]: string} = {
 	["&"] = "&amp;", -- 38
 	["<"] = "&lt;", -- 60
 	[">"] = "&gt;", -- 62
@@ -1450,7 +1451,7 @@ for rangeStart, rangeEnd in string.gmatch(ESCAPES_PATTERN, "(.)%-(.)") do
 	end
 end
 
-local XML_Encoders
+local XML_Encoders: {[string]: (any) -> (any, string?)}
 XML_Encoders = {
 	_cdata = function(raw) -- ? Normally Roblox doesn't use CDATA unless the string has newline characters (\n); We rather CDATA everything for sake of speed
 		return "<![CDATA[" .. raw .. "]]>"
@@ -1621,7 +1622,7 @@ XML_Encoders = {
 			or CustomPhysics
 	end,
 	ProtectedString = function(raw)
-		return string_find(raw, "]]>") and string.gsub(raw, ESCAPES_PATTERN, ESCAPES) or XML_Encoders._cdata(raw)
+		return string.find(raw, "]]>", 1, true) and string.gsub(raw, ESCAPES_PATTERN, ESCAPES) or XML_Encoders._cdata(raw)
 	end,
 	Ray = function(raw)
 		local vector3 = XML_Encoders.Vector3
@@ -1712,7 +1713,7 @@ XML_Encoders = {
 	int64 = nil, -- Int64 (long)
 	string = function(raw)
 		return (raw == nil or raw == "") and ""
-			or string_find(raw, "]]>") and string.gsub(raw, ESCAPES_PATTERN, ESCAPES)
+			or string.find(raw, "]]>", 1, true) and string.gsub(raw, ESCAPES_PATTERN, ESCAPES)
 			or XML_Encoders._cdata(string.gsub(raw, "\0", ""))
 	end,
 
@@ -3983,7 +3984,7 @@ local function synsaveinstance(...)
 		local inputLower = string.lower(input)
 		search = string.lower(search)
 
-		if not string_find(inputLower, search) then
+		if not string.find(inputLower, search, 1, true) then
 			return input
 		end
 
@@ -3994,7 +3995,7 @@ local function synsaveinstance(...)
 		while search_len <= input_len - lastFinish do
 			local init = lastFinish + 1
 
-			local start, finish = string_find(inputLower, search, init)
+			local start, finish = string.find(inputLower, search, init, true)
 
 			if start == nil then
 				break
@@ -4676,7 +4677,7 @@ local function synsaveinstance(...)
 			needle = "Unable to get property " .. property.Name
 			property.ErrNeedle = needle
 		end
-		return string_find(result, needle) ~= nil
+		return string.find(result, needle, 1, true) ~= nil
 	end
 
 	local GHP_STATE_FILE = USSI_FOLDER .. "GHP_STATE.json"
@@ -6510,17 +6511,17 @@ local function synsaveinstance(...)
 					return nil
 				end
 
-				local keyStart = string_find(encoded, '"zbase64"')
+				local keyStart = string.find(encoded, '"zbase64"', 1, true)
 				if not keyStart then
 					return nil
 				end
 
-				local valueStart = string_find(encoded, '"', keyStart + 9)
+				local valueStart = string.find(encoded, '"', keyStart + 9, true)
 				if not valueStart then
 					return nil
 				end
 
-				local valueEnd = string_find(encoded, '"', valueStart + 1)
+				local valueEnd = string.find(encoded, '"', valueStart + 1, true)
 				if not valueEnd then
 					return nil
 				end
