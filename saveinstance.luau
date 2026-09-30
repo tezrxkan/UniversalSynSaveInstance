@@ -3744,7 +3744,7 @@ local function synsaveinstance(...: any): ()
 
 		-- ! Risky
 		RiskyServicesDisabled = {
-			UGC = true,
+			UGC = false,
 			Encoding = false,
 			Reflection = false,
 		},
